@@ -6,6 +6,15 @@ $(document).ready( function() {
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
+	$('.inspiration-getter').submit( function(event){
+		// zero out results if previous search has run
+		$('.results').html('');
+		// get the value of the tags the user submitted
+		var answerers = $(this).find("input[name='answerers']").val();
+		getInspiration(answerers);
+	});
+
+
 });
 
 // this function takes the question object returned by StackOverflow 
@@ -36,6 +45,33 @@ var showQuestion = function(question) {
 												'</a>' +
 							'</p>' +
  							'<p>Reputation: ' + question.owner.reputation + '</p>'
+	);
+
+	return result;
+};
+
+
+var showUser = function(user) {
+	//{"reputation":319954,"user_id":13249,"user_type":"moderator","accept_rate":100,"profile_image":"http://i.stack.imgur.com/nGCYr.jpg?s=128&g=1","display_name":"Nick Craver","link":"http://stackoverflow.com/users/13249/nick-craver"},"post_count":4657,"score":25708}
+	// clone our result template code
+	var result = $('.templates .question').clone();
+	
+	// Set the question properties in result
+	var questionElem = result.find('.question-text a');
+	questionElem.attr('href', user.link);
+	questionElem.text(user.display_name);
+
+	// set the #views for question property in result
+	var viewed = result.find('.viewed');
+	viewed.text(user.score);
+
+	// set some properties related to asker
+	var asker = result.find('.asker');
+	asker.html('<p>Name: <a target="_blank" href=http://stackoverflow.com/users/' + user.user.user_id + ' >' +
+													user.user.display_name +
+												'</a>' +
+							'</p>' +
+ 							'<p>Post Count: ' + user.post_count + '</p>'
 	);
 
 	return result;
@@ -86,6 +122,38 @@ var getUnanswered = function(tags) {
 		var errorElem = showError(error);
 		$('.search-results').append(errorElem);
 	});
+};
+
+var getInspiration = function(tags) {
+	
+	// the parameters we need to pass in our request to StackOverflow's API
+	//var request = {tagged: tags,
+	//							site: 'stackoverflow',
+	//							order: 'desc',
+	//							sort: 'creation'};
+	
+	var result = $.ajax({
+		///2.2/tags/test/top-answerers/all_time?site=stackoverflow
+		url: "http://api.stackexchange.com/2.2/tags/"+tags+"/top-answerers/all_time?site=stackoverflow",
+		//data: request,
+		dataType: "jsonp",
+		type: "GET",
+		})
+	.done(function(result){
+		var searchResults = showSearchResults(tags, result.items.length);
+
+		$('.search-results').html(searchResults);
+
+		$.each(result.items, function(i, item) {
+			var user = showUser(item);
+			$('.results').append(user);
+		});
+	})
+	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+
 };
 
 

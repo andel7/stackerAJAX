@@ -14,7 +14,7 @@ $(document).ready( function() {
 		getInspiration(answerers);
 	});
 
-
+	console.log("this is a master update for testing");
 });
 
 // this function takes the question object returned by StackOverflow 
